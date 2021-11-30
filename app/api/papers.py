@@ -1,59 +1,54 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import HTTPException
-from app.api.models import Paper
-from typing import List
+
+from app.api.models import Paper, PaperIn, PaperOut, PaperUpdate
+from app.api import db_manager
 
 
 papers = APIRouter()
 
 
-fake_paper_db = [
-    {
-        'author': 'James Freeman',
-        'topic': 'Female nutrition',
-        'content': 'Female nutrition sucks',
-        'tags': ['female', 'nutrition', 'food'],
-    }
-]
-
-
-@papers.get('/', response_model=List[Paper])
+@papers.get('/', response_model=List[PaperOut])
 async def index():
-    return fake_paper_db
+    return await db_manager.get_all_papers()
 
 
-@papers.post('/', status_code=201)
-async def add(paper: Paper):
-    paper = paper.dict()
-    fake_paper_db.append(paper)
+@papers.post('/', status_code=201, response_model=PaperOut)
+async def add(payload: PaperIn):
+    paper_id = await db_manager.add_paper(payload)
 
-    return {'id': len(fake_paper_db) - 1}
-
-
-@papers.put('/')
-async def update(paper_id: int, paper: Paper):
-    paper = paper.dict()
-    papers_quantity = len(fake_paper_db)
-
-    if 0 <= paper_id < papers_quantity:
-        fake_paper_db[paper_id] = paper
-        return None
-
-    raise HTTPException(
-        status_code=400,
-        detail='Paper with given id not found',
+    return PaperOut(
+        id=paper_id,
+        **payload.dict(),
     )
 
 
-@papers.delete('/')
+@papers.put('/{id}')
+async def update(paper_id: int, payload: PaperUpdate):
+    paper = await db_manager.get_paper(paper_id)
+
+    if not paper:
+        raise HTTPException(
+            status_code=400,
+            detail='Paper with given id not found',
+        )
+
+    data = payload.dict(exclude_unset=True)
+    paper_in_db = PaperIn(**paper)
+    paper_updated = paper_in_db.copy(update=data)
+    return await db_manager.update_paper(paper_id, paper_updated)
+
+
+@papers.delete('/{id}')
 async def delete(paper_id: int):
-    papers_quantity = len(fake_paper_db)
+    paper = await db_manager.get_paper(paper_id)
 
-    if 0 <= paper_id < papers_quantity:
-        del fake_paper_db[paper_id]
-        return None
+    if not paper:
+        raise HTTPException(
+            status_code=400,
+            detail='Paper with given id not found',
+        )
 
-    raise HTTPException(
-        status_code=400,
-        detail='Paper with given id not found',
-    )
+    return await db_manager.delete_paper(paper_id)
