@@ -9,7 +9,7 @@ from sqlalchemy import (
     ARRAY,
 )
 
-from app.api.configs import DATABASE_URL
+from app.api.configs import DATABASE_URI
 
 
 metadata = MetaData()
@@ -22,8 +22,8 @@ papers = Table(
     Column('author', String(255)),
     Column('topic', String(255)),
     Column('content', String),
-    Column('tags', ARRAY(String)),
+    Column('tags_id', ARRAY(Integer)),
 )
 
-engine = create_engine(DATABASE_URL)
-database = Database(DATABASE_URL)
+engine = create_engine(DATABASE_URI)
+database = Database(DATABASE_URI)

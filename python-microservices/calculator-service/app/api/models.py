@@ -6,7 +6,7 @@ class Paper(BaseModel):
     author: str
     topic: str
     content: str
-    tags: List[str]
+    tags_id: List[int]
 
 
 class PaperIn(Paper):
@@ -21,4 +21,4 @@ class PaperUpdate(Paper):
     author: Optional[str] = None
     topic: Optional[str] = None
     content: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags_id: Optional[List[int]] = None

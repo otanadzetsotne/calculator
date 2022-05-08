@@ -1,4 +1,4 @@
-from app.api.models import PaperOut, PaperIn, PaperUpdate
+from app.api.models import PaperIn
 from app.api.db import papers, database
 
 
